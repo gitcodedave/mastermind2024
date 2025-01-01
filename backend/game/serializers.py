@@ -11,13 +11,15 @@ class PlayerProfileSerializer(serializers.ModelSerializer):
 class GameSerializer(serializers.ModelSerializer):
     class Meta:
         model = Game
-        fields = ['id', 'active_player', 'secret_number', 'game_round', 'created_at', 'total_time']
+        fields = ['id', 'active_player', 'secret_number',
+                  'game_round', 'created_at', 'total_time']
 
 
 class RoundSerializer(serializers.ModelSerializer):
     class Meta:
         model = Round
-        fields = ['id', 'game', 'guess', 'correct_numbers', 'correct_positions', 'timestamp']
+        fields = ['id', 'game', 'guess', 'correct_numbers',
+                  'correct_positions', 'timestamp']
 
 
 class LeaderboardSerializer(serializers.ModelSerializer):
