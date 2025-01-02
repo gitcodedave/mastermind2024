@@ -133,6 +133,10 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+
+"""
+Base user is created in core app to remove dependency on a single app
+"""
 AUTH_USER_MODEL = 'core.User'
 
 REST_FRAMEWORK = {
