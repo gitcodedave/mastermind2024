@@ -8,14 +8,19 @@ from rest_framework.views import APIView
 from rest_framework import status
 
 from .mixins import PlayerDataMixin
-from .models import Game, PlayerProfile, Round
 from .permissions import IsSuperUser
-from .serializers import GameSerializer, PlayerProfileSerializer, RoundSerializer
+from .models import Game, Leaderboard, PlayerProfile, Round
+from .serializers import GameSerializer, LeaderboardSerializer, PlayerProfileSerializer, RoundSerializer
 import requests
 # Create your views here.
 
 
 class PlayerProfileViewSet(ModelViewSet):
+    """
+    Endpoint: playerprofiles/
+    Retrieves list of all Players, requires IsSuperUser permission
+    POST, PATCH, DELETE, require IsAuthenticated permission
+    """
     queryset = PlayerProfile.objects.all()
     serializer_class = PlayerProfileSerializer
 
@@ -30,6 +35,10 @@ class PlayerProfileViewSet(ModelViewSet):
 
     @action(detail=False, methods=['GET'])
     def me(self, request):
+        """
+         Custom action endpoint: auth/users/me/ 
+         Retrieves player's data using access token in cookies
+        """
         player = PlayerProfile.objects.get(player_id=request.user.id)
         if request.method == 'GET':
             serializer = PlayerProfileSerializer(player)
@@ -37,6 +46,11 @@ class PlayerProfileViewSet(ModelViewSet):
 
 
 class NewGameView(PlayerDataMixin, APIView):
+    """
+    Endpoint: newgame/
+    Handles POST request - creates Game entry using external API data
+    Updates player's current_game id
+    """
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
@@ -65,6 +79,9 @@ class NewGameView(PlayerDataMixin, APIView):
             return Response({'error': f'Error with external API: {str(error)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     def generate_random_number(self, difficulty):
+        """
+        Helper function - uses external API to generate random number
+        """
         url = f'https://www.random.org/integers/?num={
             difficulty}&min=0&max=7&col=1&base=10&format=plain&rnd=new'
         response = requests.get(url)
@@ -76,6 +93,11 @@ class NewGameView(PlayerDataMixin, APIView):
 
 
 class RoundsView(PlayerDataMixin, APIView):
+    """
+    Endpoint: gamerounds/
+    Handles GET request - retrieves player's round-data from current game
+    Handles POST request - creates Round entry using player's guess
+    """
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
@@ -105,10 +127,10 @@ class RoundsView(PlayerDataMixin, APIView):
 
         correct_numbers, correct_positions = self.evaluate_guesses(
             secret_number_list=secret_number_list, guess_list=guess_list)
-        
+
         round_data = {
             "game": game_id,
-            "guess": guess, 
+            "guess": guess,
             "correct_numbers": correct_numbers,
             "correct_positions": correct_positions
         }
@@ -125,9 +147,11 @@ class RoundsView(PlayerDataMixin, APIView):
         game.save()
 
         return Response(serializer.data, status=status.HTTP_201_CREATED)
-        
 
     def evaluate_guesses(self, secret_number_list, guess_list):
+        """
+        Helper function - compares player's guess with secret_number
+        """
         correct_numbers = 0
         correct_positions = 0
 
@@ -147,3 +171,68 @@ class RoundsView(PlayerDataMixin, APIView):
                 secret_number_list[new_index] = 'x'
 
         return correct_numbers, correct_positions
+
+
+class LeaderboardTotalsView(PlayerDataMixin, APIView):
+    """
+    Endpoint: leaderboard/
+    Handles GET request - retrieves player's win and fastest time stats
+    """
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        player_data = self.get_player_data(request)
+
+        player = player_data.get('player')
+        difficulty = player_data.get('difficulty')
+
+        win_total = Leaderboard.objects.filter(
+            player_id=player, result='W', difficulty=difficulty).count()
+        fastest_game = Leaderboard.objects.filter(
+            player_id=player, result='W', difficulty=difficulty).order_by('total_time').first()
+
+        if not fastest_game:
+            fastest_time = None
+        else:
+            fastest_time = fastest_game.total_time
+
+        game_id = player_data.get('current_game')
+
+        if game_id is None:
+            return Response({'error': 'Game not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        rankings = {
+            "wins": win_total,
+            "fastest_time": fastest_time,
+        }
+        return Response(rankings, status=status.HTTP_200_OK)
+
+
+class GameViewSet(ModelViewSet):
+    """
+    SuperUser only view - work with Game data
+    Handles LIST, GET, POST, PATCH, DELETE
+    """
+    permission_classes = [IsSuperUser]
+    queryset = Game.objects.all()
+    serializer_class = GameSerializer
+
+
+class RoundViewSet(ModelViewSet):
+    """
+    SuperUser only view - work with Round data
+    Handles LIST, GET, POST, PATCH, DELETE
+    """
+    permission_classes = [IsSuperUser]
+    queryset = Round.objects.all()
+    serializer_class = RoundSerializer
+
+
+class LeaderboardViewSet(ModelViewSet):
+    """
+    SuperUser only view - work with Leaderboard data
+    Handles LIST, GET, POST, PATCH, DELETE
+    """
+    permission_classes = [IsSuperUser]
+    queryset = Leaderboard.objects.all()
+    serializer_class = LeaderboardSerializer
