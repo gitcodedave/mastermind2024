@@ -15,7 +15,7 @@ class PlayerProfile(models.Model):
 
 
 class Game(models.Model):
-    active_player = models.ForeignKey(
+    player = models.ForeignKey(
         PlayerProfile, on_delete=models.CASCADE, related_name='active_player_games')
     secret_number = models.CharField(max_length=6)
     game_round = models.IntegerField(
