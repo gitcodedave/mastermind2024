@@ -36,7 +36,7 @@ class Round(models.Model):
 
     class Meta:
         constraints = [
-            models.UniqueConstraints(
+            models.UniqueConstraint(
                 fields=['game', 'guess'], name='unique_guess')
         ]
 
@@ -57,7 +57,7 @@ class Leaderboard(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        constrains = [
+        constraints = [
             models.UniqueConstraint(
                 fields=['player', 'game'], name='unique_player_game')
         ]
