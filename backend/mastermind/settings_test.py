@@ -13,12 +13,11 @@ from .settings import *
 
 TESTING = True
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'mastermind_test',
-        'HOST': 'localhost',
-        'USER': 'root',
-        'PASSWORD': 'newpassword'
-    }
+DATABASES['default'] = {
+    'ENGINE': 'django.db.backends.mysql',
+    'NAME': 'test_db',
+    'USER': 'root',
+    'PASSWORD': 'newpassword',
+    'HOST': 'localhost',
+    'PORT': '3306',
 }
