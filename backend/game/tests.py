@@ -12,6 +12,12 @@ import pytest
 
 User = get_user_model()
 
+"""
+Fixtures include:
+user, superuser, clients, with respective permissions
+player_profile with user permissions
+game, round, leaderboard with mock data
+"""
 
 @pytest.fixture
 def user(db):
@@ -188,10 +194,12 @@ class TestRoundsView:
             "guess": '1234'
         }
 
+        pre_post_leaderboard_entry = Leaderboard.objects.filter(game_id=game.id).exists()
         response = user_client.post(url, post_data, format='json')
         game.refresh_from_db()
         post_game_round = game.game_round
         post_game_time = game.total_time
+        leaderboard_entry = Leaderboard.objects.filter(game_id=game.id).first()
 
         assert response.status_code == status.HTTP_201_CREATED
         assert response.data['game'] == 1
@@ -201,6 +209,8 @@ class TestRoundsView:
         assert initial_game_round == post_game_round - 1
         assert (initial_game_time < post_game_time) == True
         assert isinstance(game.total_time, datetime.timedelta) == True
+        assert pre_post_leaderboard_entry == False
+        assert leaderboard_entry.result == 'W'
 
     def test_post_rounds_unauthorized(self, api_client):
         url = reverse('game-rounds')

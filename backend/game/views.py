@@ -41,7 +41,7 @@ class PlayerProfileViewSet(ModelViewSet):
     def me(self, request):
         """
          Custom action endpoint: auth/users/me/ 
-         Retrieves player's data using access token in cookies
+         Retrieves Player's data using access token in cookies
         """
         player = PlayerProfile.objects.get(player_id=request.user.id)
         if request.method == 'GET':
@@ -50,6 +50,11 @@ class PlayerProfileViewSet(ModelViewSet):
 
 
 class DifficultyConfigView(PlayerDataMixin, APIView):
+    """
+    Endpoint: difficulty/
+    Handles GET request - retrieves Player's difficulty setting
+    Handles PATCH request - updates Player's difficulty setting
+    """
     def get(self, request):
         player_data = self.get_player_data(request)
 
@@ -74,7 +79,7 @@ class NewGameView(PlayerDataMixin, APIView):
     """
     Endpoint: newgame/
     Handles POST request - creates Game entry using external API data
-    Updates player's current_game id
+    Updates Player's current_game id
     """
     permission_classes = [IsAuthenticated]
 
@@ -125,8 +130,8 @@ class NewGameView(PlayerDataMixin, APIView):
 class RoundsView(PlayerDataMixin, APIView):
     """
     Endpoint: gamerounds/
-    Handles GET request - retrieves player's round-data from current game
-    Handles POST request - creates Round entry using player's guess
+    Handles GET request - retrieves Player's round-data from current game
+    Handles POST request - creates Round entry using Player's guess
     """
     permission_classes = [IsAuthenticated]
 
@@ -145,6 +150,11 @@ class RoundsView(PlayerDataMixin, APIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def post(self, request):
+        """
+        Two entries may be created from this:
+        1. A Round entry
+        2. If the Player guesses correctly, a Leaderboard entry is created
+        """
         player_data = self.get_player_data(request)
         game_id = player_data.get('current_game')
         game = Game.objects.get(pk=game_id)
@@ -182,11 +192,21 @@ class RoundsView(PlayerDataMixin, APIView):
         game.total_time = total_time
         game.save()
 
+        player = player_data.get('player')
+        difficulty = player_data.get('difficulty')
+
+        if correct_positions == difficulty:
+            self.update_leaderboard(
+                game=game, result='W', player=player, difficulty=difficulty)
+        elif game.game_round >= 10:
+            self.update_leaderboard(
+                game=game, result='L', player=player, difficulty=difficulty)
+
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     def evaluate_guesses(self, secret_number_list, guess_list):
         """
-        Helper function - compares player's guess with secret_number
+        Helper function - compares Player's guess with secret_number
         """
         correct_numbers = 0
         correct_positions = 0
@@ -207,12 +227,29 @@ class RoundsView(PlayerDataMixin, APIView):
                 secret_number_list[new_index] = 'x'
 
         return correct_numbers, correct_positions
+    
+    def update_leaderboard(self, game, result, player, difficulty):
+        """
+        Helper function - Creates new Leaderboard entry when player wins
+        """
+        leaderboard_data = {
+            "result": result,
+            "total_time": game.total_time,
+            "difficulty": difficulty,
+            "player": player,
+            "game": game.id
+        }
+
+        serializer = LeaderboardSerializer(data=leaderboard_data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        logger.debug('Leaderboard win added for player id: %s', player)
 
 
 class LeaderboardTotalsView(PlayerDataMixin, APIView):
     """
     Endpoint: leaderboard/
-    Handles GET request - retrieves player's win and fastest time stats
+    Handles GET request - retrieves Player's win and fastest time stats
     """
     permission_classes = [IsAuthenticated]
 
