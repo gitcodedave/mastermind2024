@@ -13,5 +13,6 @@ router.register('leaderboards', views.LeaderboardViewSet)
 urlpatterns = router.urls + [
     path('newgame/', views.NewGameView.as_view(), name='new-game'),
     path('gamerounds/', views.RoundsView.as_view(), name='game-rounds'),
-    path('leaderboard/', views.LeaderboardTotalsView.as_view(), name='leaderboard')
+    path('leaderboard/', views.LeaderboardTotalsView.as_view(), name='leaderboard'),
+    path('difficulty/', views.DifficultyConfigView.as_view(), name='get-difficulty')
 ]

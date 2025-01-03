@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.utils import timezone as django_timezone
 
 from rest_framework.permissions import IsAuthenticated
@@ -12,6 +13,9 @@ from .permissions import IsSuperUser
 from .models import Game, Leaderboard, PlayerProfile, Round
 from .serializers import GameSerializer, LeaderboardSerializer, PlayerProfileSerializer, RoundSerializer
 import requests
+import logging
+logger = logging.getLogger(__name__)
+
 # Create your views here.
 
 
@@ -45,6 +49,27 @@ class PlayerProfileViewSet(ModelViewSet):
             return Response(serializer.data, status=status.HTTP_200_OK)
 
 
+class DifficultyConfigView(PlayerDataMixin, APIView):
+    def get(self, request):
+        player_data = self.get_player_data(request)
+
+        difficulty = player_data.get('difficulty')
+
+        return Response(difficulty, status=status.HTTP_200_OK)
+
+    def patch(self, request):
+        player_data = self.get_player_data(request)
+
+        difficulty = int(request.data.get('difficulty'))
+
+        player = PlayerProfile.objects.get(player=player_data.get('player'))
+
+        player.difficulty = difficulty
+        player.save()
+        logger.debug('Difficulty changed to: %s', difficulty)
+        return Response(difficulty, status=status.HTTP_200_OK)
+
+
 class NewGameView(PlayerDataMixin, APIView):
     """
     Endpoint: newgame/
@@ -67,12 +92,14 @@ class NewGameView(PlayerDataMixin, APIView):
             serializer = GameSerializer(data=new_game_data)
             serializer.is_valid(raise_exception=True)
             game = serializer.save()
+            logger.debug('New game created with difficulty: %s', difficulty)
 
             active_player = PlayerProfile.objects.get(
                 player=player_data['player']
             )
             active_player.current_game = game
             active_player.save()
+            logger.debug('current_game updated as: %s', game)
 
             return Response({}, status=status.HTTP_201_CREATED)
         except requests.exceptions.RequestException as error:
@@ -82,14 +109,17 @@ class NewGameView(PlayerDataMixin, APIView):
         """
         Helper function - uses external API to generate random number
         """
-        url = f'https://www.random.org/integers/?num={
-            difficulty}&min=0&max=7&col=1&base=10&format=plain&rnd=new'
-        response = requests.get(url)
-        if response.status_code != 200:
-            response.raise_for_status()
+        if not settings.TESTING:
+            url = f'https://www.random.org/integers/?num={
+                difficulty}&min=0&max=7&col=1&base=10&format=plain&rnd=new'
+            response = requests.get(url)
+            if response.status_code != 200:
+                response.raise_for_status()
 
-        secret_number = response.text
-        return secret_number
+            secret_number = response.text
+            return secret_number
+        else:
+            return '1234'
 
 
 class RoundsView(PlayerDataMixin, APIView):
@@ -123,7 +153,11 @@ class RoundsView(PlayerDataMixin, APIView):
         secret_number_list = [x for x in secret_number]
 
         guess = request.data.get('guess')
+        logger.debug('Guess made: %s', guess)
+
         guess_list = [x for x in guess]
+        if len(guess_list) > 6:
+            return Response({'error': 'Guess length too long'}, status=status.HTTP_400_BAD_REQUEST)
 
         correct_numbers, correct_positions = self.evaluate_guesses(
             secret_number_list=secret_number_list, guess_list=guess_list)
@@ -136,8 +170,10 @@ class RoundsView(PlayerDataMixin, APIView):
         }
 
         serializer = RoundSerializer(data=round_data)
-        serializer.is_valid()
-        serializer.save()
+        if serializer.is_valid():
+            serializer.save()
+        else:
+            return Response({'error': 'Wrong data type'}, status=status.HTTP_400_BAD_REQUEST)
 
         current_time = django_timezone.now()
         total_time = current_time - game.created_at
