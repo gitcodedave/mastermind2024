@@ -6,6 +6,11 @@ from django.core.validators import MinValueValidator, MaxValueValidator
 
 
 class PlayerProfile(models.Model):
+    """
+    Represents a user with added fields: 
+    difficulty - How many numbers the need to guess 
+    current game - id for retrieving their current game state
+    """
     difficulty = models.IntegerField(
         validators=[MinValueValidator(4), MaxValueValidator(6)], default=4)
     player = models.OneToOneField(
@@ -15,6 +20,10 @@ class PlayerProfile(models.Model):
 
 
 class Game(models.Model):
+    """
+    Represents the game config
+    player - id of who the game belongs to
+    """
     player = models.ForeignKey(
         PlayerProfile, on_delete=models.CASCADE, related_name='active_player_games')
     secret_number = models.CharField(max_length=6)
@@ -25,6 +34,10 @@ class Game(models.Model):
 
 
 class Round(models.Model):
+    """
+    Represents each time a player makes a guess
+    game - id of the game that the rounds belong to
+    """
     game = models.ForeignKey(
         Game, on_delete=models.CASCADE, related_name='rounds')
     guess = models.CharField(max_length=6)
@@ -42,6 +55,9 @@ class Round(models.Model):
 
 
 class Leaderboard(models.Model):
+    """
+    Represents the results of a player's wins, includes time of game and difficulty
+    """
     RESULT_WIN = 'W'
     RESULT_LOSS = 'L'
     RESULT_CHOICES = [
