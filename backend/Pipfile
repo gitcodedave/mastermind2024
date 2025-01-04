@@ -13,6 +13,7 @@ djangorestframework-simplejwt = "*"
 pytest = "*"
 pytest-django = "*"
 django-cors-headers = "*"
+dj-database-url = "*"
 
 [dev-packages]
 
