@@ -8,7 +8,7 @@ class PlayerDataMixin:
     def get_player_data(self, request):
             if not settings.TESTING:   
                 token = request.COOKIES.get('AccessToken')
-                response = requests.get(f'{settings.BASE_URL}/game/playerprofiles/me', headers={
+                response = requests.get(f'{settings.BASE_URL}/game/playerprofiles/me/', headers={
                     "Authorization": f'JWT {token}'
                 })
                 if response.status_code != 200:

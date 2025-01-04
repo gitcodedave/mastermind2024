@@ -55,6 +55,7 @@ class DifficultyConfigView(PlayerDataMixin, APIView):
     Handles GET request - retrieves Player's difficulty setting
     Handles PATCH request - updates Player's difficulty setting
     """
+
     def get(self, request):
         player_data = self.get_player_data(request)
 
@@ -86,11 +87,11 @@ class NewGameView(PlayerDataMixin, APIView):
     def post(self, request):
         try:
             player_data = self.get_player_data(request)
-            difficulty = player_data.get('difficulty')
+            difficulty = int(player_data.get('difficulty'))
 
             new_game_data = {
                 "player": player_data['player'],
-                "secret_number": self.generate_random_number(difficulty=difficulty),
+                "secret_number": self.generate_random_number(difficulty),
                 "game_round": 0
             }
 
@@ -121,7 +122,7 @@ class NewGameView(PlayerDataMixin, APIView):
             if response.status_code != 200:
                 response.raise_for_status()
 
-            secret_number = response.text
+            secret_number = str(''.join(response.text.splitlines()))
             return secret_number
         else:
             return '1234'
@@ -227,7 +228,7 @@ class RoundsView(PlayerDataMixin, APIView):
                 secret_number_list[new_index] = 'x'
 
         return correct_numbers, correct_positions
-    
+
     def update_leaderboard(self, game, result, player, difficulty):
         """
         Helper function - Creates new Leaderboard entry when player wins

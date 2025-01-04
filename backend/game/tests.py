@@ -19,6 +19,7 @@ player_profile with user permissions
 game, round, leaderboard with mock data
 """
 
+
 @pytest.fixture
 def user(db):
     user = User.objects.create_user(
@@ -135,10 +136,11 @@ class TestDifficultyConfigView:
 
         response = user_client.patch(url, data=patch_data, format='json')
         player_profile.refresh_from_db()
-        
+
         assert response.status_code == status.HTTP_200_OK
         assert response.data == patch_data['difficulty']
         assert player_profile.difficulty == patch_data['difficulty']
+
 
 @pytest.mark.django_db
 class TestNewGameView:
@@ -194,7 +196,8 @@ class TestRoundsView:
             "guess": '1234'
         }
 
-        pre_post_leaderboard_entry = Leaderboard.objects.filter(game_id=game.id).exists()
+        pre_post_leaderboard_entry = Leaderboard.objects.filter(
+            game_id=game.id).exists()
         response = user_client.post(url, post_data, format='json')
         game.refresh_from_db()
         post_game_round = game.game_round
