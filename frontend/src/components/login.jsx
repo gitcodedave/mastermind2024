@@ -24,7 +24,6 @@ const LoginBox = () => {
         }
 
         const token = await getToken(credentials);
-
         if (token) {
             const accessToken = token.access;
             const refreshToken = token.refresh;

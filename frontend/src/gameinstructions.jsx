@@ -1,0 +1,2 @@
+/* eslint-disable no-multi-str */
+export const Instructions = 'Guess the secret number! \n\nEach time you guess, you will be given feedback on how many numbers were correct and how many were also in the correct position. You have 10 tries, good luck!'
