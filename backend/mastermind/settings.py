@@ -12,6 +12,8 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 
 from datetime import timedelta
 from pathlib import Path
+import dj_database_url
+import os
 
 TESTING = False
 
@@ -24,7 +26,8 @@ BASE_URL = 'http://localhost:8000'
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-s6os!3h$1@_f)6i(pe@sa_bi+qsbc@y8fc@on8z78%dlg-__wa'
+SECRET_KEY = os.getenv('SECRET_KEY')
+
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -85,15 +88,32 @@ WSGI_APPLICATION = 'mastermind.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'mastermind',
-        'HOST': 'localhost',
-        'USER': 'root',
-        'PASSWORD': 'newpassword'
+IN_DOCKER = True
+
+if IN_DOCKER is True:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.mysql',
+            'NAME': os.getenv('MYSQL_DATABASE'),
+            'USER': os.getenv('MYSQL_USER'),
+            'PASSWORD': os.getenv('MYSQL_PASSWORD'),
+            'HOST': 'db',
+            'PORT': '3306',
+        }
     }
-}
+
+    DATABASES['default'] = dj_database_url.config(default=os.getenv(
+        'DATABASE_URL', ''), engine='django.db.backends.mysql') or DATABASES['default']
+else:    
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.mysql',
+            'NAME': 'mastermind',
+            'HOST': 'localhost',
+            'USER': 'root',
+            'PASSWORD': 'newpassword'
+        }
+    }
 
 
 # Password validation
