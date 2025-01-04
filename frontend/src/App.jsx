@@ -1,11 +1,21 @@
 import './App.css';
+import { AuthProvider } from './context/AuthContext';
+import { CookiesProvider } from 'react-cookie';
+import { BrowserRouter } from 'react-router-dom';
+import AppRoutes from './routes/routes';
 
 
 const App = () => {
   return (
     <>
       <div className='main'>
-        Main app
+        <CookiesProvider>
+          <AuthProvider>
+            <BrowserRouter>
+              <AppRoutes />
+            </BrowserRouter>
+          </AuthProvider>
+        </CookiesProvider>
       </div>
     </>
   );

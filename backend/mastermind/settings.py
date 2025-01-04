@@ -173,9 +173,15 @@ LOGGING = {
     'loggers': {
         'django': {
             'handlers': ['console'],
-            'level': 'INFO',
+            'level': 'WARNING',
+            'propagate': True,
         },
-        'game': {  
+        'django.request': {
+            'handlers': ['console'],
+            'level': 'WARNING',
+            'propagate': False,
+        },
+        'game': {
             'handlers': ['console'],
             'level': 'DEBUG',
             'propagate': False,

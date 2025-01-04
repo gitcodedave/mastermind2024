@@ -13,5 +13,5 @@ def create_player_profile(sender, instance, created, **kwargs):
     Creates new Player profile when a user is created
     """
     if created:
-        logger.info('User created with ID: %s', instance.id)
+        logger.debug('User created with ID: %s', instance.id)
         PlayerProfile.objects.create(player=instance)
