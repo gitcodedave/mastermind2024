@@ -10,10 +10,13 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
+import os
 from datetime import timedelta
 from pathlib import Path
 import dj_database_url
-import os
+from dotenv import load_dotenv
+load_dotenv()
+
 
 TESTING = False
 
@@ -27,7 +30,6 @@ BASE_URL = 'http://localhost:8000'
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.getenv('SECRET_KEY')
-
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -104,7 +106,7 @@ if IN_DOCKER is True:
 
     DATABASES['default'] = dj_database_url.config(default=os.getenv(
         'DATABASE_URL', ''), engine='django.db.backends.mysql') or DATABASES['default']
-else:    
+else:
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.mysql',

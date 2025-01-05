@@ -15,7 +15,7 @@ export const AuthProvider = ({ children }) => {
     login - accepts the username, access token, refresh token - sets them as cookies
     logout - removes cookies: username, access token, and refresh token
     */
-    const [cookies, setCookie, removeCookie] = useCookies(['AccessToken', 'Player']);
+    const [cookies, setCookie, removeCookie] = useCookies(['AccessToken', 'Player', 'PreviousPlayer', 'PauseTime']);
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [loading, setLoading] = useState(true);
 
@@ -30,7 +30,7 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
-    
+
     const getToken = async (credentials) => {
         try {
             const response = await API.post('/auth/jwt/create', credentials);
@@ -40,8 +40,8 @@ export const AuthProvider = ({ children }) => {
             return null;
         }
     };
-    
-    
+
+
     const isTokenValid = useCallback(async (token) => {
         /*
         Utility function
@@ -73,23 +73,29 @@ export const AuthProvider = ({ children }) => {
         const expiryTime = decodedToken.exp * 1000;
         return Date.now() > expiryTime;
     };
-    
+
 
     const login = (playerName, accessToken, refreshToken) => {
+        if (playerName !== cookies.PreviousPlayer) {
+            removeCookie('PauseTime')
+        }
         setCookie('Player', playerName, { path: '/' });
         setCookie('AccessToken', accessToken, { path: '/' });
         setCookie('RefreshToken', refreshToken, { path: '/' });
         setLoading(false);
-        setIsAuthenticated(true); 
+        setIsAuthenticated(true);
     };
 
 
     const logout = useCallback((playerName) => {
+        setCookie('PreviousPlayer', cookies.Player, { path: '/' });
+        const currentPauseTime = new Date();
+        setCookie('PauseTime', currentPauseTime.toISOString(), { path: '/' })
         removeCookie('Player', { path: '/' });
         removeCookie('AccessToken', { path: '/' });
         removeCookie('RefreshToken', { path: '/' });
-
-    }, [removeCookie]);
+        setIsAuthenticated(false)
+    }, [removeCookie, setCookie, cookies.Player]);
 
 
     const refreshToken = useCallback(async () => {
@@ -114,6 +120,10 @@ export const AuthProvider = ({ children }) => {
         }
     }, [cookies.RefreshToken, setCookie, logout]);
 
+
+
+
+    const [hasChecked, setHasChecked] = useState(false);
 
     const fetchAuthenticatedPlayer = useCallback(async () => {
         /*
@@ -141,12 +151,16 @@ export const AuthProvider = ({ children }) => {
             setIsAuthenticated(false);
         } finally {
             setLoading(false);
+            setHasChecked(true);
         }
     }, [cookies, isTokenValid, refreshToken]);
 
     useEffect(() => {
-        fetchAuthenticatedPlayer();
-    }, [fetchAuthenticatedPlayer]);
+        if (!hasChecked) {
+            fetchAuthenticatedPlayer();
+        }
+    }, [hasChecked, fetchAuthenticatedPlayer]);
+
 
     useEffect(() => {
         /*

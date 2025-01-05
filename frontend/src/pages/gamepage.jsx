@@ -2,11 +2,11 @@ import { useAuth } from "../context/AuthContext";
 import { useCookies } from "react-cookie";
 import { API } from "../api/api";
 import { Instructions } from "../gameinstructions";
-import { createDisabledButtons } from "../utility/utility";
-import { useCallback, useEffect, useState } from "react";
+import { createDisabledButtons, convertSeconds } from "../utility/utility";
+import { useCallback, useEffect, useState, useRef } from "react";
 
 const GamePage = () => {
-    const [cookies] = useCookies(['AccessToken', 'Player']);
+    const [cookies, setCookie, removeCookie] = useCookies(['AccessToken', 'Player', 'PauseTime']);
     const [difficulty, setDifficulty] = useState('');
     const [difficultySelector, setDifficultySelector] = useState('Difficulty');
     const [guess, setGuess] = useState([]);
@@ -18,9 +18,12 @@ const GamePage = () => {
     const [errorMessage, setErrorMessage] = useState('');
     const [isLoading, setIsLoading] = useState(false);
 
+    const [startTime, setStartTime] = useState(null);
+    const [elapsedTime, setElapsedTime] = useState('');
+
     const player = cookies.Player;
     const { logout } = useAuth();
-
+    const intervalRef = useRef(null);
 
     const newGame = async () => {
         /*
@@ -43,6 +46,7 @@ const GamePage = () => {
                 setGuess('')
                 await fetchRoundData();
                 await fetchDifficulty();
+                await fetchStartTime();
                 await fetchLeaderboard();
                 setIsLoading(false);
             };
@@ -79,7 +83,6 @@ const GamePage = () => {
         const difficultyData = {
             difficulty: difficultySelector
         };
-        console.log(difficultyData)
         try {
             const difficultyResponse = await API.patch(`game/difficulty/`, difficultyData, {
                 headers: {
@@ -221,6 +224,7 @@ const GamePage = () => {
     const fetchLeaderboard = useCallback(async () => {
         /*
         Fetch total player wins information
+        The elapsed time is reset in case game is in 'win/lose' state
         */
         try {
             const leaderBoardResponse = await API.get(`game/leaderboard/`, {
@@ -230,7 +234,10 @@ const GamePage = () => {
             })
             if (leaderBoardResponse.status === 200) {
                 const data = leaderBoardResponse.data;
-                setLeaderboard({ wins: data.wins })
+                const fastest_time = convertSeconds(data.fastest_time)
+                const current_game_time = convertSeconds(data.current_game_time)
+                setElapsedTime(current_game_time)
+                setLeaderboard({ wins: data.wins, fastest_time: fastest_time })
             }
         } catch (error) {
             console.log(error, 'Unable to fetch Rankings')
@@ -303,6 +310,93 @@ const GamePage = () => {
     }, [cookies.AccessToken, fetchDifficulty, fetchRoundData, fetchLeaderboard]);
 
 
+    /* TIMER AREA */
+
+    const fetchStartTime = useCallback(async () => {
+        try {
+            const startTimeResponse = await API.get(`game/starttime/`, {
+                headers: {
+                    Authorization: `JWT ${cookies.AccessToken}`,
+                },
+            });
+            if (startTimeResponse.status === 200) {
+                const data = startTimeResponse.data;
+                const startTime = new Date(data.start_time);
+                setStartTime(startTime);
+            }
+        } catch (error) {
+            console.log(error, 'Unable to fetch start time')
+        }
+    }, [cookies.AccessToken]);
+
+
+    useEffect(() => {
+        fetchStartTime();
+    }, [fetchStartTime]);
+
+
+    useEffect(() => {
+        /*
+        Interval updates timer every (1000 milli)second
+        Timer does not run if in win/lose state, or if no start time
+        */
+        if (startTime && !isWinner && !isLoser) {
+            intervalRef.current = setInterval(() => {
+                const currentTime = new Date();
+                const elapsed = Math.floor((currentTime - startTime) / 1000);
+                const convertedTime = convertSeconds(elapsed)
+                setElapsedTime(convertedTime);
+            }, 1000);
+        }
+        return () => clearInterval(intervalRef.current);
+    }, [startTime, isWinner, isLoser]);
+
+
+    const handlePause = useCallback(async () => {
+        const currentPauseTime = new Date();
+        setCookie('PauseTime', currentPauseTime.toISOString(), { path: '/' })
+    }, [setCookie]);
+
+
+    useEffect(() => {
+        const handleResume = async () => {
+            if (cookies.PauseTime) {
+                try {
+                    const resumeGameResponse = await API.patch(`game/resumegame/`, {}, {
+                        headers: {
+                            Authorization: `JWT ${cookies.AccessToken}`,
+                        }
+                    });
+                    if (resumeGameResponse.status === 200) {
+                        removeCookie('PauseTime')
+                    }
+                } catch (error) {
+                    console.log(error, 'Unable to resume game')
+                }
+            }
+        };
+        handleResume().then(() => {
+            fetchStartTime();
+        });
+    }, [cookies.AccessToken, cookies.PauseTime, fetchStartTime, removeCookie]);
+    
+
+    useEffect(() => {
+        const handleBeforeUnload = (event) => {
+            handlePause();
+            event.returnValue = '';
+        };
+
+        window.addEventListener('beforeunload', handleBeforeUnload);
+
+        return () => {
+            window.removeEventListener('beforeunload', handleBeforeUnload);
+        };
+    }, [elapsedTime, handlePause]);
+
+    /* TIMER AREA */
+    
+    
     return (
         <div className='maincontainer'>
             <div className='rankingscontainer'>
@@ -311,6 +405,9 @@ const GamePage = () => {
                 </div>
                 <div className='rankings'>
                     Wins: {leaderboard.wins}
+                </div>
+                <div className='rankings'>
+                    Fastest Time: {leaderboard.fastest_time}
                 </div>
             </div>
             <div className='wholepagecontainer'>
@@ -351,8 +448,9 @@ const GamePage = () => {
                         </select>
                         <button onClick={handleSetDifficulty}>Set</button>
                     </div>
-                    <button className='logoutbutton' onClick={() => logout(player)}>Logout</button>
+                    <button className='logoutbutton' onClick={() => logout()}>Logout</button>
                 </div>
+                <div className='timer'>Time: {elapsedTime}</div>
             </div>
         </div>
     )

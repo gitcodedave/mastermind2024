@@ -1,5 +1,7 @@
 from django.conf import settings
 from django.utils import timezone as django_timezone
+from datetime import datetime, timezone
+from urllib.parse import unquote
 
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.viewsets import ModelViewSet
@@ -17,6 +19,10 @@ import logging
 logger = logging.getLogger(__name__)
 
 # Create your views here.
+
+"""
+BaseURL for all endpoints: http://localhost:8000/game/
+"""
 
 
 class PlayerProfileViewSet(ModelViewSet):
@@ -100,12 +106,13 @@ class NewGameView(PlayerDataMixin, APIView):
             game = serializer.save()
             logger.debug('New game created with difficulty: %s', difficulty)
 
-            active_player = PlayerProfile.objects.get(
+            player = PlayerProfile.objects.get(
                 player=player_data['player']
             )
-            active_player.current_game = game
-            active_player.save()
-            logger.debug('current_game updated as: %s', game)
+            player.current_game = game
+            player.save()
+            logger.debug('current_game updated to %s for: %s',
+                         str(game), str(player))
 
             return Response({}, status=status.HTTP_201_CREATED)
         except requests.exceptions.RequestException as error:
@@ -148,6 +155,8 @@ class RoundsView(PlayerDataMixin, APIView):
             game_id=game_id).order_by('timestamp')
         serializer = RoundSerializer(round_data, many=True)
 
+        logger.debug(f'Completed rounds: {len(serializer.data)}')
+
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def post(self, request):
@@ -187,7 +196,7 @@ class RoundsView(PlayerDataMixin, APIView):
             return Response({'error': 'Wrong data type'}, status=status.HTTP_400_BAD_REQUEST)
 
         current_time = django_timezone.now()
-        total_time = current_time - game.created_at
+        total_time = current_time - game.start_time
 
         game.game_round += 1
         game.total_time = total_time
@@ -275,15 +284,70 @@ class LeaderboardTotalsView(PlayerDataMixin, APIView):
         if game_id is None:
             return Response({'error': 'Game not found'}, status=status.HTTP_404_NOT_FOUND)
 
+        current_game = Game.objects.get(pk=game_id)
+
+        current_game_time = current_game.total_time
+
         rankings = {
             "wins": win_total,
             "fastest_time": fastest_time,
+            "current_game_time": current_game_time,
         }
         return Response(rankings, status=status.HTTP_200_OK)
 
 
+class StartTimeView(PlayerDataMixin, APIView):
+    """
+    Endpoint: starttime/
+    Handles GET request - Retrieves the time Player started the current Game
+    """
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        player_data = self.get_player_data(request)
+
+        game_id = player_data.get('current_game')
+
+        if game_id is None:
+            return Response({'error': 'Game not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        game = Game.objects.filter(pk=game_id).first()
+
+        start_time = game.start_time
+        return Response({'start_time': start_time}, status=status.HTTP_200_OK)
+
+
+class ResumeGameView(PlayerDataMixin, APIView):
+    """
+    Endpoint: resumegame/
+    Handles PATCH request:
+    When Player logs out or closes tab, a cookie is saved with the current time
+    Once Player returns, that saved time is used to offset and correct the timer
+    """
+    permission_classes = [IsAuthenticated]
+
+    def patch(self, request):
+        player_data = self.get_player_data(request)
+
+        game_id = player_data.get('current_game')
+        game = Game.objects.filter(pk=game_id).first()
+
+        if game_id is None:
+            return Response({'error': 'Game not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        resume_time = django_timezone.now()
+        pause_time_str = unquote(request.COOKIES.get('PauseTime'))
+        pause_time = datetime.fromisoformat(
+            pause_time_str.replace('Z', '+00:00')).astimezone(timezone.utc)
+        pause_duration = resume_time - pause_time
+        game.start_time += pause_duration
+        game.save()
+        return Response({'status': 'resumed'}, status=status.HTTP_200_OK)
+
+
 class GameViewSet(ModelViewSet):
     """
+    Endpoint: games/
     SuperUser only view - work with Game data
     Handles LIST, GET, POST, PATCH, DELETE
     """
@@ -294,6 +358,7 @@ class GameViewSet(ModelViewSet):
 
 class RoundViewSet(ModelViewSet):
     """
+    Endpoint: rounds/
     SuperUser only view - work with Round data
     Handles LIST, GET, POST, PATCH, DELETE
     """
@@ -304,6 +369,7 @@ class RoundViewSet(ModelViewSet):
 
 class LeaderboardViewSet(ModelViewSet):
     """
+    Endpoint: leaderboards/
     SuperUser only view - work with Leaderboard data
     Handles LIST, GET, POST, PATCH, DELETE
     """

@@ -1,9 +1,13 @@
+from time import timezone
 from django.urls import reverse
-from django.contrib.auth import get_user_model
 from django.conf import settings
+from django.contrib.auth import get_user_model
+from django.utils import timezone as django_timezone
+
 from rest_framework.test import APIClient
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework import status
+
 from game.models import Game, Leaderboard, PlayerProfile, Round
 import datetime
 import pytest
@@ -49,6 +53,7 @@ def api_client():
 def user_client(api_client, user):
     refresh = RefreshToken.for_user(user)
     api_client.cookies['AccessToken'] = str(refresh.access_token)
+    api_client.cookies['PauseTime'] = str(django_timezone.now())
     api_client.credentials(HTTP_AUTHORIZATION=f'JWT {refresh.access_token}')
     return api_client
 
@@ -252,3 +257,76 @@ class TestLeaderboardTotalsView:
         assert response.data['wins'] == 1
         assert response.data['fastest_time'] == datetime.timedelta(
             minutes=1, seconds=30)
+
+
+@pytest.mark.django_db
+class TestStartTimeView:
+    def test_get_start_time(self, game, user_client):
+        url = reverse('start-time')
+        response = user_client.get(url)
+
+        assert response.status_code == status.HTTP_200_OK
+        assert isinstance(
+            response.data['start_time'], datetime.datetime) == True
+
+
+@pytest.mark.django_db
+class TestResumeGameView:
+    def test_patch_resume_game(self, game, user_client):
+        url = reverse('resume-game')
+
+        old_time = game.start_time
+        response = user_client.patch(url)
+        game.refresh_from_db()
+        new_time = game.start_time
+
+        assert response.status_code == status.HTTP_200_OK
+        assert (new_time > old_time) == True
+
+
+@pytest.mark.django_db
+class TestGameViewSet:
+    def test_get_game_list_with_superuser(self, superuser, superuser_client):
+        url = reverse('game-list')
+
+        response = superuser_client.get(url)
+        assert response.status_code == status.HTTP_200_OK
+        assert isinstance(response.data, list) == True
+
+    def test_get_game_list_with_user(self, user, user_client):
+        url = reverse('game-list')
+
+        response = user_client.get(url)
+        assert response.status_code == status.HTTP_403_FORBIDDEN
+
+
+@pytest.mark.django_db
+class TestRoundViewSet:
+    def test_get_round_list_with_superuser(self, superuser, superuser_client):
+        url = reverse('round-list')
+
+        response = superuser_client.get(url)
+        assert response.status_code == status.HTTP_200_OK
+        assert isinstance(response.data, list) == True
+
+    def test_get_round_list_with_user(self, user, user_client):
+        url = reverse('round-list')
+
+        response = user_client.get(url)
+        assert response.status_code == status.HTTP_403_FORBIDDEN
+
+
+@pytest.mark.django_db
+class TestLeaderboardViewSet:
+    def test_get_leaderboard_list_with_superuser(self, superuser, superuser_client):
+        url = reverse('leaderboard-list')
+
+        response = superuser_client.get(url)
+        assert response.status_code == status.HTTP_200_OK
+        assert isinstance(response.data, list) == True
+
+    def test_get_leaderboard_list_with_user(self, user, user_client):
+        url = reverse('leaderboard-list')
+
+        response = user_client.get(url)
+        assert response.status_code == status.HTTP_403_FORBIDDEN
