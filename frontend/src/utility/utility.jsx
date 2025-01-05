@@ -19,3 +19,13 @@ export const createDisabledButtons = () => {
         </div>
     )
 };
+
+export const convertSeconds = (time) => {
+    /*
+    Converts a total amount of seconds into a 0:00 timer
+    */
+    const minutes = Math.floor(time / 60);
+    const seconds = Math.floor(time % 60);
+    const timeString = `${minutes}:${seconds < 10 ? `0${seconds}` : seconds}`;
+    return timeString;
+};

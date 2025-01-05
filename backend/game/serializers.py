@@ -12,7 +12,7 @@ class GameSerializer(serializers.ModelSerializer):
     class Meta:
         model = Game
         fields = ['id', 'player', 'secret_number',
-                  'game_round', 'created_at', 'total_time']
+                  'game_round', 'start_time', 'total_time']
 
 
 class RoundSerializer(serializers.ModelSerializer):
