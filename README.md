@@ -8,7 +8,7 @@ https://www.docker.com/products/docker-desktop/
 1. Fork and clone the repository to your local machine.
 2. In your terminal, navigate to the root project folder mastermind:
    ```
-   cd mastermind
+   cd mastermind2024
    ```
 3. Before building the containers, you first need to set up the environment variables (for accessing your MySQL database as well as setting the secret key for auth tokens).
 - ### **Create a .env file in the root folder with the following template:**
