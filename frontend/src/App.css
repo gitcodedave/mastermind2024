@@ -1,0 +1,433 @@
+body {
+    font-family: "Press Start 2P", serif;
+  }
+  
+  .maincontainer {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  
+  .loginregistercontainer {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    width: 100vw;
+  }
+  
+  .loginregisterbox {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+  
+  .loginregisterinput {
+    font-family: "Press Start 2P", serif;
+    background-color: white;
+    border-color: #271623;
+    border-style: solid;
+    border-width: 3px;
+    width: 500px;
+    height: 40px;
+    padding-top: 5px;
+    padding-bottom: 5px;
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+  
+  .register button {
+    cursor: pointer;
+    background-color: #ffd746;
+    box-shadow: inset -2px -2px #cfad2f;
+    padding: 4px 6px;
+    border-color: #271623;
+    border-width: 2px;
+    border-style: solid;
+    height: 25px;
+    font-size: 10px;
+    font-family: "Press Start 2P", serif;
+  }
+  
+  .rankingscontainer {
+    width: 400px;
+    display: flex;
+    flex-direction: column;
+    margin-top: 20px;
+    gap: 5px;
+  }
+  
+  .rankings {
+    font-size: 10px;
+  }
+  
+  .wholepagecontainer {
+    padding-top: 15px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: 600px;
+  }
+  
+  .gameboardcontainer {
+    width: 500px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+  }
+  
+  .gametitlecontainer {
+    width: 504px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    background-color: white;
+    margin-bottom: 10px;
+    position: relative;
+  }
+  
+  .gametitle {
+    display: flex;
+    color: #1b1b1b;
+    font-size: 20px;
+    font-weight: bold;
+    justify-content: center;
+    margin-bottom: 5px;
+  }
+  
+  .newgame button {
+    position: absolute;
+    right: 0px;
+    cursor: pointer;
+    background-color: #ffd746;
+    box-shadow: inset -2px -2px #cfad2f;
+    padding: 4px 6px;
+    border-color: #271623;
+    border-width: 2px;
+    border-style: solid;
+    height: 25px;
+    font-size: 10px;
+    font-family: "Press Start 2P", serif;
+  }
+  
+  .newgame button:hover {
+    background-color: #eec633;
+  }
+  
+  .gameinstructionscontainer {
+    width: 400px;
+  }
+  
+  .gameinstructions {
+    margin-top: 20px;
+    margin-bottom: 20px;
+    white-space: pre-wrap;
+    font-size: 10px;
+    line-height: 15px;
+  }
+  
+  .miscbuttonscontainer {
+    display: flex;
+    flex-direction: row;
+    gap: 10px;
+    font-size: 10px;
+  }
+  
+  .difficultylabel {
+    font-size: 8px;
+    margin-bottom: 2px;
+    margin-left: 15px;
+  }
+  
+  .difficulty select {
+    cursor: pointer;
+    background-color: #ffd746;
+    box-shadow: inset -2px -2px #cfad2f;
+    padding: 4px 6px;
+    border-color: #271623;
+    border-width: 2px;
+    border-style: solid;
+    height: 25px;
+    font-size: 10px;
+    font-family: "Press Start 2P", serif;
+  }
+  
+  .difficulty button {
+    cursor: pointer;
+    background-color: #ffd746;
+    box-shadow: inset -2px -2px #cfad2f;
+    padding: 4px 6px;
+    border-color: #271623;
+    border-width: 2px;
+    border-style: solid;
+    height: 25px;
+    font-size: 10px;
+    font-family: "Press Start 2P", serif;
+  }
+  
+  .difficulty select:hover {
+    background-color: #eec633;
+  }
+  
+  .difficulty button:hover {
+    background-color: #eec633;
+  }
+  
+  .logoutbutton {
+    cursor: pointer;
+    background-color: #dd576b;
+    box-shadow: inset -2px -2px #9d3242;
+    padding: 4px 6px;
+    color: #ffffff;
+    border-color: #271623;
+    border-width: 2px;
+    border-style: solid;
+    height: 25px;
+    font-size: 10px;
+    font-family: "Press Start 2P", serif;
+  }
+  
+  .logoutbutton:hover {
+    background-color: #d1465b;
+  }
+  
+  .gameboard {
+    background-color: white;
+    width: 400px;
+  }
+  
+  .containername {
+    margin-top: -7px;
+    margin-left: 10px;
+    font-size: 10px;
+  }
+  
+  .controlscontainer {
+    background-color: white;
+    border-color: #271623;
+    border-style: solid;
+    border-width: 2px;
+    width: 500px;
+    height: 60px;
+    padding-bottom: 2px;
+  }
+  
+  .controls {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 50px;
+    gap: 5px;
+  }
+  
+  .numberbuttoncontainer {
+    display: flex;
+    justify-content: center;
+    gap: 2px;
+    margin-top: 5px;
+  }
+  
+  .numberbuttons {
+    cursor: pointer;
+    background-color: #ffffff;
+    box-shadow: inset -2px -2px #aeaeae;
+    padding: 4px 6px;
+    border-color: #271623;
+    border-width: 2px;
+    border-style: solid;
+    height: 25px;
+    font-size: 12px;
+    font-family: "Press Start 2P", serif;
+  }
+  
+  .numberbuttons:hover {
+    background-color: #e7e7e7;
+  }
+  
+  .disablednumberbuttons {
+    color: #868686;
+    background-color: #d0d0d0;
+    box-shadow: inset -2px -2px #a8a8a8;
+    padding: 4px 6px;
+    border-color: #271623;
+    border-width: 2px;
+    border-style: solid;
+    height: 25px;
+    font-size: 12px;
+    font-family: "Press Start 2P", serif;
+  }
+  
+  .deletebutton {
+    cursor: pointer;
+    background-color: #dd576b;
+    box-shadow: inset -2px -2px #9d3242;
+    padding: 4px 6px;
+    color: #ffffff;
+    border-color: #271623;
+    border-width: 2px;
+    border-style: solid;
+    height: 25px;
+    font-size: 12px;
+    font-family: "Press Start 2P", serif;
+  }
+  
+  .deletebutton:hover {
+    background-color: #d1465b;
+  }
+  
+  .disableddeletebutton {
+    color: #868686;
+    background-color: #d0d0d0;
+    box-shadow: inset -2px -2px #a8a8a8;
+    padding: 4px 6px;
+    border-color: #271623;
+    border-width: 2px;
+    border-style: solid;
+    height: 25px;
+    font-size: 12px;
+    font-family: "Press Start 2P", serif;
+  }
+  
+  .submitbutton {
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100px;
+    background-color: #488acc;
+    box-shadow: inset -2px -2px #2c6299;
+    padding: 4px 6px;
+    color: #ffffff;
+    border-color: #271623;
+    border-width: 2px;
+    border-style: solid;
+    height: 25px;
+    font-size: 12px;
+    font-family: "Press Start 2P", serif;
+  }
+  
+  .submitbutton:hover {
+    background-color: #387dc2;
+  }
+  
+  .disabledsubmitbutton {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100px;
+    color: #868686;
+    background-color: #d0d0d0;
+    box-shadow: inset -2px -2px #a8a8a8;
+    padding: 4px 6px;
+    border-color: #271623;
+    border-width: 2px;
+    border-style: solid;
+    height: 25px;
+    font-size: 12px;
+    font-family: "Press Start 2P", serif;
+  }
+  
+  .gameround {
+    font-family: "Press Start 2P", serif;
+    font-size: 30px;
+    color: #271623;
+    height: 52px;
+    border-color: #271623;
+    border-style: solid;
+    border-width: 2px;
+    width: 500px;
+    margin-top: 7px;
+  }
+  
+  
+  .gameinfo {
+    background-color: black;
+    height: 30px;
+    outline: #1b1b1b;
+    outline-style: solid;
+    outline-width: 2px;
+    border-color: #ffffff;
+    border-style: solid;
+    border-width: 2px;
+    margin-left: 10px;
+    margin-top: 5px;
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding-left: 5px;
+    padding-right: 5px;
+    gap: 4px;
+    font-size: 8px;
+    color: rgb(255, 255, 255);
+  }
+  
+  .guess {
+    height: 100%;
+    margin-top: -3px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    font-size: 20px;
+  }
+  
+  .winner {
+    font-family: "Press Start 2P", serif;
+    color: #271623;
+    background-color: #73bb2f;
+    box-shadow: inset -5px -5px #568e23;
+    padding: 4px 6px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    font-size: 30px;
+    color: #ffffff;
+    height: 52px;
+    border-color: #271623;
+    border-style: solid;
+    border-width: 2px;
+    width: 488px;
+    margin-top: 7px;
+  }
+  
+  .loser {
+    font-family: "Press Start 2P", serif;
+    color: #271623;
+    background-color: #dd576b;
+    box-shadow: inset -5px -5px #9d3242;
+    padding: 4px 6px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    font-size: 30px;
+    color: #ffffff;
+    height: 52px;
+    border-color: #271623;
+    border-style: solid;
+    border-width: 2px;
+    width: 488px;
+    margin-top: 7px;
+  }
+  
+  .loading {
+    margin-top: 10px;
+  }
+  
+  .timer {
+    margin-top: 10px;
+    font-size: 10px;
+  }
+  
+  .errormessage {
+    margin-top: 5px;
+    margin-bottom: 5px;
+    color: #dd576b;
+    font-size: 8px;
+  }
