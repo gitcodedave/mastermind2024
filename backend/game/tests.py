@@ -102,11 +102,18 @@ class TestPlayerProfileViewSet:
         assert response.status_code == status.HTTP_200_OK
         assert isinstance(response.data, list) == True
 
-    def test_get_player_list_with_user(self, user, user_client):
+    def test_get_player_list_with_user_unauthorized(self, user, user_client):
         url = reverse('playerprofile-list')
 
         response = user_client.get(url)
         assert response.status_code == status.HTTP_403_FORBIDDEN
+
+    def test_get_player_list_with_user_invalid_token(self, user, player_profile, user_client):
+        url = reverse('playerprofile-detail', args=[player_profile.player.id])
+        user_client.credentials(HTTP_AUTHORIZATION=f'JWT {'bad token'}')
+        response = user_client.get(url)
+
+        assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
     def test_create_player_after_user_created(self, user, user_client):
         url = f'{settings.BASE_URL}/auth/users/'
@@ -119,6 +126,16 @@ class TestPlayerProfileViewSet:
             pk=response.data['id']).exists()
         assert response.status_code == status.HTTP_201_CREATED
         assert new_player == True
+
+    def test_create_duplicate_player(self, user, user_client):
+        url = f'{settings.BASE_URL}/auth/users/'
+        credentials = {
+            "username": 'user',
+            "password": 'testpassword123'
+        }
+        response = user_client.post(url, credentials, format='json')
+        
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
 
 
 @pytest.mark.django_db
@@ -210,15 +227,20 @@ class TestRoundsView:
         leaderboard_entry = Leaderboard.objects.filter(game_id=game.id).first()
 
         assert response.status_code == status.HTTP_201_CREATED
+        # Test valid payload data
         assert response.data['game'] == 1
         assert response.data['guess'] == '1234'
         assert response.data['correct_numbers'] == 4
         assert response.data['correct_positions'] == 4
+
+        # Test game data was updated
         assert initial_game_round == post_game_round - 1
         assert (initial_game_time < post_game_time) == True
-        assert isinstance(game.total_time, datetime.timedelta) == True
         assert pre_post_leaderboard_entry == False
         assert leaderboard_entry.result == 'W'
+
+        # Test updated game data type
+        assert isinstance(game.total_time, datetime.timedelta) == True
 
     def test_post_rounds_unauthorized(self, api_client):
         url = reverse('game-rounds')
@@ -239,6 +261,16 @@ class TestRoundsView:
         url = reverse('game-rounds')
         post_data = {
             "guess": '1234567'
+        }
+
+        response = user_client.post(url, post_data, format='json')
+
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+    def test_post_rounds_duplicate_guess(self, game, base_round, user_client):
+        url = reverse('game-rounds')
+        post_data = {
+            "guess": '1111'
         }
 
         response = user_client.post(url, post_data, format='json')
@@ -283,6 +315,12 @@ class TestResumeGameView:
         assert response.status_code == status.HTTP_200_OK
         assert (new_time > old_time) == True
 
+    def test_patch_resume_game_bad_token(self, game, user_client):
+        url = reverse('resume-game')
+        user_client.credentials(HTTP_AUTHORIZATION=f'JWT {'bad token'}')
+        response = user_client.patch(url)
+
+        assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
 @pytest.mark.django_db
 class TestGameViewSet:

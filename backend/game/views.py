@@ -16,6 +16,7 @@ from .models import Game, Leaderboard, PlayerProfile, Round
 from .serializers import GameSerializer, LeaderboardSerializer, PlayerProfileSerializer, RoundSerializer
 import requests
 import logging
+import random
 logger = logging.getLogger(__name__)
 
 # Create your views here.
@@ -121,13 +122,16 @@ class NewGameView(PlayerDataMixin, APIView):
     def generate_random_number(self, difficulty):
         """
         Helper function - uses external API to generate random number
+        * If external API is unavailable, generates random number internally
         """
         if not settings.TESTING:
             url = f'https://www.random.org/integers/?num={
                 difficulty}&min=0&max=7&col=1&base=10&format=plain&rnd=new'
             response = requests.get(url)
             if response.status_code != 200:
-                response.raise_for_status()
+                logger.debug('response %s', response.text)
+                logger.warning('External random API is down, switching to internal number generator')
+                return ''.join(str(random.randint(0, 7)) for _ in range(difficulty))
 
             secret_number = str(''.join(response.text.splitlines()))
             return secret_number
