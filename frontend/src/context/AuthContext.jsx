@@ -143,8 +143,12 @@ export const AuthProvider = ({ children }) => {
                     setIsAuthenticated(!!newToken);
                 }
             } else {
-                const newToken = await refreshToken();
-                setIsAuthenticated(!!newToken);
+                if (accessToken) {
+                    const newToken = await refreshToken();
+                    setIsAuthenticated(!!newToken);
+                } else {
+                    setIsAuthenticated(false)
+                }
             }
         } catch (error) {
             console.error('Error fetching authenticated player:', error);
